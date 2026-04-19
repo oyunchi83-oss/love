@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedAssist AI Pro</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #F5F7FA;
+}
+
+header {
+  background: #2A7FFF;
+  color: white;
+  padding: 15px;
+  text-align: center;
+}
+
+.container {
+  padding: 10px;
+}
+
+.card {
+  background: white;
+  border-radius: 15px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* CHAT */
+.chat-box {
+  height: 300px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.message {
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 12px;
+  max-width: 80%;
+}
+
+.user {
+  background: #2A7FFF;
+  color: white;
+  margin-left: auto;
+}
+
+.bot {
+  background: #EAEAEA;
+}
+
+input {
+  width: 75%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 10px;
+  border: none;
+  background: #2A7FFF;
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* SOURCES */
+.sources {
+  font-size: 12px;
+  margin-top: 10px;
+  color: gray;
+}
+</style>
+</head>
+
+<body>
+
+<header>🩺 MedAssist AI Pro</header>
+
+<div class="container">
+
+<div class="card">
+  <h3>💬 AI Chat</h3>
+
+  <div id="chatBox" class="chat-box"></div>
+
+  <div style="margin-top:10px;">
+    <input id="chatInput" placeholder="Асуултаа бич...">
+    <button onclick="chat()">Send</button>
+  </div>
+
+  <div id="sources" class="sources"></div>
+
+  <small>⚠️ Зөвхөн сургалтын зориулалттай</small>
+</div>
+
+</div>
+
+<script>
+
+function addMessage(text, type){
+  let div = document.createElement("div");
+  div.className = "message " + type;
+  div.innerText = text;
+  document.getElementById("chatBox").appendChild(div);
+
+  document.getElementById("chatBox").scrollTop =
+    document.getElementById("chatBox").scrollHeight;
+}
+
+async function chat(){
+  let input = document.getElementById("chatInput").value;
+  if(!input) return;
+
+  addMessage(input, "user");
+  document.getElementById("chatInput").value = "";
+
+  let loading = addMessage("⏳ Уншиж байна...", "bot");
+
+  try{
+    let res = await fetch("http://localhost:3000/ask", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        text: input
+      })
+    });
+
+    let data = await res.json();
+
+    // remove loading
+    document.getElementById("chatBox").lastChild.remove();
+
+    addMessage(data.reply, "bot");
+
+    // sources (хэрвээ backend нэмбэл)
+    if(data.sources){
+      document.getElementById("sources").innerText =
+        "Эх сурвалж: \n" + data.sources.join("\n");
+    }
+
+  } catch(e){
+    document.getElementById("chatBox").lastChild.remove();
+    addMessage("❌ Server холбогдсонгүй", "bot");
+  }
+}
+
+</script>
+
+</body>
+</html>
